@@ -7,11 +7,12 @@ import {
   Param,
   Delete,
 } from '@nestjs/common';
+import { get } from 'http';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 
-@Controller('course')
+@Controller('courses')
 export class CourseController {
   constructor(private readonly courseService: CourseService) {}
 
@@ -28,6 +29,11 @@ export class CourseController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.courseService.findOne(+id);
+  }
+
+  @Get()
+  findByCreator(@Param('creatorId') creatorId: string) {
+    return this.courseService.findByCreatorId(+creatorId);
   }
 
   @Patch(':id')

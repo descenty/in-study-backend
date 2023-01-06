@@ -28,6 +28,19 @@ export class CourseService {
     }
   }
 
+  async findByCreatorId(creatorId: number) {
+    try {
+      return await this.prisma.course.findMany({
+        where: {
+          creatorId
+        }
+      });
+    }
+    catch (error) {
+      throw new NotFoundException(`Course with creatorId ${creatorId} not found`);
+    }
+  }
+
   update(id: number, updateCourseDto: UpdateCourseDto) {
     return `This action updates a #${id} course`;
   }
