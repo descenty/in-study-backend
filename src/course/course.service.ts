@@ -20,7 +20,14 @@ export class CourseService {
       return await this.prisma.course.findUniqueOrThrow({
         where: {
           id
+        },
+        include: {
+          lessons: true
         }
+      
+
+
+        
       });
     }
     catch (error) {

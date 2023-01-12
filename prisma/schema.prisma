@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,30 +8,40 @@ datasource db {
 }
 
 model User {
-  id        Int          @id @default(autoincrement())
-  name      String?
-  email     String       @unique
-  password  String
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  courses   UserCourse[]
-  reviews   Review[]
+  id             Int           @id @default(autoincrement())
+  name           String?
+  email          String        @unique
+  password       String
+  createdAt      DateTime      @default(now())
   createdCourses Course[]
+  reviews        Review[]
+  courses        UserCourse[]
+  taskAttempts   TaskAttempt[]
 }
 
 model Course {
   id          Int          @id @default(autoincrement())
   title       String
   description String
-  image       String?
   price       Float
   rating      Float
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
-  users       UserCourse[]
-  reviews     Review[]
+  image       String?
   creatorId   Int
   creator     User         @relation(fields: [creatorId], references: [id])
+  lessons     Lesson[]
+  reviews     Review[]
+  users       UserCourse[]
+}
+
+model UserCourse {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  courseId  Int
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Review {
@@ -44,15 +51,90 @@ model Review {
   rating    Float
   comment   String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
   course    Course   @relation(fields: [courseId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 }
 
-model UserCourse {
+model Lesson {
   id        Int      @id @default(autoincrement())
-  userId    Int
-  courseId  Int
+  title     String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  updatedAt DateTime @updatedAt
+  courseId  Int
   course    Course   @relation(fields: [courseId], references: [id])
+  steps     Step[]
+}
+
+model Step {
+  id             Int              @id @default(autoincrement())
+  text           String
+  lessonId       Int
+  lesson         Lesson           @relation(fields: [lessonId], references: [id])
+  codeTask       CodeTask[]
+  multipleChoice MultipleChoice[]
+}
+
+model MultipleChoice {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  stepId    Int      @unique
+  choices   Choice[]
+  step      Step     @relation(fields: [stepId], references: [id])
+}
+
+model Choice {
+  id               Int            @id @default(autoincrement())
+  value            String?
+  multipleChoiceId Int
+  isCorrect        Boolean
+  multipleChoice   MultipleChoice @relation(fields: [multipleChoiceId], references: [id])
+}
+
+enum Language {
+  PYTHON
+  JAVASCRIPT
+}
+
+model CodeTask {
+  id           Int           @id @default(autoincrement())
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  stepId       Int           @unique
+  step         Step          @relation(fields: [stepId], references: [id])
+  language     Language      @default(PYTHON)
+  solutions    Solution[]
+  testCode     String?
+  functionName String?
+  exampleTests ExampleTest[]
+  taskAttempts TaskAttempt[]
+}
+
+model TaskAttempt {
+  id         Int       @id @default(autoincrement())
+  createdAt  DateTime  @default(now())
+  codeTaskId Int
+  codeTask   CodeTask? @relation(fields: [codeTaskId], references: [id])
+  code       String
+  result     String?
+  passed     Boolean?
+  userId     Int
+  processed  Boolean   @default(false)
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model ExampleTest {
+  id         Int      @id @default(autoincrement())
+  codeTask   CodeTask @relation(fields: [codeTaskId], references: [id])
+  codeTaskId Int
+  input      String
+  output     String
+}
+
+model Solution {
+  id         Int      @id @default(autoincrement())
+  createdAt  DateTime @default(now())
+  code       String
+  codeTaskId Int
+  codeTask   CodeTask @relation(fields: [codeTaskId], references: [id])
 }
