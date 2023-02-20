@@ -6,8 +6,11 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
+import { Req } from '@nestjs/common/decorators';
 import { get } from 'http';
+import { ExtendedRequest, JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { CourseService } from './course.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -22,18 +25,29 @@ export class CourseController {
   }
 
   @Get()
-  findAll() {
-    return this.courseService.findAll();
+  findAll(@Req() request: ExtendedRequest) {
+    return this.courseService.findAll(
+      request.user ? request.user.id : undefined,
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('/creator')
+  findAllCreator(@Req() request: ExtendedRequest) {
+    return this.courseService.findAllCreator(request.user.id);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.courseService.findOne(+id);
+  findOne(@Param('id') id: string, @Req() request: ExtendedRequest) {
+    return this.courseService.findOne(
+      +id,
+      request.user ? request.user.id : undefined,
+    );
   }
 
   @Get()
-  findByCreator(@Param('creatorId') creatorId: string) {
-    return this.courseService.findByCreatorId(+creatorId);
+  findByCreator(@Param('creator') creator: string) {
+    return this.courseService.findByCreatorId(+creator);
   }
 
   @Patch(':id')
@@ -44,5 +58,11 @@ export class CourseController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.courseService.remove(+id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/enroll')
+  enroll(@Param('id') id: string, @Req() request: ExtendedRequest) {
+    return this.courseService.enroll(request.user.id, +id);
   }
 }

@@ -1,24 +1,17 @@
 import { CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Injectable } from '@nestjs/common/decorators/core/injectable.decorator';
-import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
+
+
+export interface ExtendedRequest extends Request {
+  user: User
+}
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private jwtService: JwtService) { }
-
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
-    try {
-      const authHeader = req.headers.authorization;
-      const bearer = authHeader.split(' ')[0];
-      const token = authHeader.split(' ')[1];
-      if (bearer !== 'Bearer' || !token) {
-        throw new UnauthorizedException('Пользователь не авторизован');
-      }
-      req.user = this.jwtService.verify(token);
-      return true;
-    } catch (e) {
-      throw new UnauthorizedException('Пользователь не авторизован');
-    }
+    if (req.user) return true;
+    throw new UnauthorizedException('Пользователь не авторизован');
   }
 }
