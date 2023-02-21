@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { BadRequestException } from '@nestjs/common/exceptions';
+import { Sql } from '@prisma/client/runtime';
 import { PrismaService } from 'src/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
@@ -45,26 +46,12 @@ export class CourseService {
   }
 
   async findAllCreator(creatorId?: number) {
-    return await this.prisma.course.findMany({
-      select: {
-        id: true,
-        title: true,
-        price: true,
-        rating: true,
-        image: true,
-        creator: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-      },
-      where: {
-        creator: {
-          id: creatorId,
-        },
-      },
-    });
+    return await this.prisma.$queryRaw`
+      select "Course".id, title, price, rating, image, count("userId") as users from "UserCourse"
+      inner join "Course" on "UserCourse"."courseId" = "Course".id
+      where "creatorId" = ${creatorId}
+      group by "Course".id
+      `;
   }
 
   async findOne(id: number, userId?: number) {
@@ -101,6 +88,7 @@ export class CourseService {
       if (!userId) return course;
       return {
         ...course,
+        isCreator: course.creator.id == userId,
         enrolled: this.prisma.userCourse.findFirst({
           where: {
             userId,
