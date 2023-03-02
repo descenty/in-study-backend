@@ -138,3 +138,11 @@ model Solution {
   codeTaskId Int
   codeTask   CodeTask @relation(fields: [codeTaskId], references: [id])
 }
+
+model Article {
+  id        Int      @id @default(autoincrement())
+  title     String
+  image     String?
+  content   String
+  createdAt DateTime @default(now())
+}
